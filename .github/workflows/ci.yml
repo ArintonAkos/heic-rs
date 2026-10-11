@@ -137,3 +137,34 @@ jobs:
       - name: Generate a lockfile so --locked has something to lock against
         run: cargo generate-lockfile
       - run: cargo publish --dry-run --locked
+
+  fuzz:
+    name: fuzz ${{ matrix.target }} (cargo-fuzz, 2 min)
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        target: [decode, probe, boxes]
+    steps:
+      - uses: actions/checkout@v7
+      - uses: dtolnay/rust-toolchain@nightly
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: fuzz
+      - name: Install cargo-fuzz
+        run: cargo install cargo-fuzz --locked
+      - name: Seed the corpus with the test fixtures
+        run: ./fuzz/seed.sh
+      # Two minutes a target, on every push and pull request: long enough that the box walk finds
+      # the 0.1.1 `uuid` panic from an empty corpus (measured before this job was added), short
+      # enough to sit beside the other checks. A crash fails the job.
+      - name: Fuzz ${{ matrix.target }}
+        run: >-
+          cargo +nightly fuzz run ${{ matrix.target }} fuzz/corpus/${{ matrix.target }}
+          -- -max_total_time=120 -rss_limit_mb=2048 -timeout=30
+      - name: Keep the crashing input
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: fuzz-crash-${{ matrix.target }}
+          path: fuzz/artifacts/${{ matrix.target }}/

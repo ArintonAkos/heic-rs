@@ -21,13 +21,19 @@ Output, API and MSRV are unchanged.
   options and in release builds. The header is now measured after the extended type, and the
   payload is sliced from that measurement. No memory-safety impact: the crate is
   `#![forbid(unsafe_code)]`, so the bug was a panic, which a caller decoding uploads should never
-  have to catch. Found by fuzzing and reported privately under `SECURITY.md`.
+  have to catch. Found by fuzzing and reported privately under `SECURITY.md` by
+  **s17sh70x2jfl031ag**, with the fix -- thank you.
 
 ### Added
 
 - Regression tests: the reported input, through `BoxIter` and `decode`; the same shape with a 64-bit
   size; and every 32- and 64-bit header of a `uuid`, `mdat` or `meta` box with any stated size below
   64 over every buffer length below 64 -- an error or a box, never a panic.
+- Fuzzing. `fuzz/` holds three `cargo-fuzz` targets -- `decode`, `probe` and the box walk -- and CI
+  runs each for two minutes on every push and pull request, seeded with the test fixtures, keeping
+  any crashing input as an artifact. With the fix reverted, the box-walk target finds this release's
+  panic from an empty corpus. GitHub's private vulnerability reporting is switched on, so the route
+  `SECURITY.md` prefers now works.
 
 ## [0.1.1] - 2026-09-11
 
