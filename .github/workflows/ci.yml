@@ -134,8 +134,10 @@ jobs:
       - uses: actions/checkout@v7
       - uses: dtolnay/rust-toolchain@stable
       - uses: Swatinem/rust-cache@v2
-      - name: Generate a lockfile so --locked has something to lock against
-        run: cargo generate-lockfile
+      # Only when there is none: the lockfile is committed now, and regenerating it resolved newer
+      # versions, left the tree dirty, and failed the dry run (0.1.2's CI).
+      - name: Ensure a lockfile exists for --locked
+        run: test -f Cargo.lock || cargo generate-lockfile
       - run: cargo publish --dry-run --locked
 
   fuzz:

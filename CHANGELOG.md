@@ -7,6 +7,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.3] - 2026-10-11
+
+A security fix, the first finding of the fuzzing 0.1.2 added. Take it if you decode untrusted files:
+a 690-byte input could make `probe` or `decode` ask for gigabytes. Output, API and MSRV are unchanged.
+
+### Security
+
+- **Items built from other items could outgrow any bound.** An item stored by construction method
+  2 is assembled from the data of other items, and each may list several extents; with items built
+  from items, eight deep, every level multiplied the one beneath it. The `probe` fuzz target found a
+  690-byte file that asked for 2.2 GB on its first CI run. An assembled item may now be no larger
+  than the file that holds it -- it is made of that file's bytes -- and a larger one is
+  `Error::Malformed`. No memory-safety impact; a resource-exhaustion bug reachable from untrusted
+  input, which `DecodeOptions::max_pixels` did not cover because it caps pixels, not item data.
+
+### Added
+
+- The fuzzer's input as a regression test, with a counting allocator: before the fix the peak grew by
+  52.9 GB; now by less than a megabyte.
+
+### Fixed
+
+- CI's publish dry run regenerated the committed lockfile and failed on the dirty tree.
+
 ## [0.1.2] - 2026-10-11
 
 A security fix. Take it if you decode untrusted files: a 24-byte input could make `decode` panic.

@@ -6,8 +6,8 @@ Security fixes land on the latest published 0.1.x release; older minor versions 
 
 | Version | Supported |
 |---|---|
-| 0.1.2 and later 0.1.x | yes |
-| 0.1.0, 0.1.1 | no -- upgrade to 0.1.2, which fixes a panic on a malformed `uuid` box |
+| 0.1.3 and later 0.1.x | yes |
+| 0.1.0 – 0.1.2 | no -- upgrade to 0.1.3 (a `uuid` box panic fixed in 0.1.2, an item-data amplification in 0.1.3) |
 
 ## Reporting a vulnerability
 
@@ -96,7 +96,8 @@ cargo +nightly fuzz run probe -- -max_total_time=300
 The first finding was external: a `uuid` box too small for its own extended type panicked in 0.1.1,
 found by fuzzing and reported privately by s17sh70x2jfl031ag. It is fixed in 0.1.2, and the `boxes`
 target rediscovers it from an empty corpus when the fix is reverted -- which is how the harness was
-shown to be able to find what it is for.
+shown to be able to find what it is for. The harness's own first finding came on its first CI run: items
+assembled from items could be made to demand gigabytes from a few hundred bytes. Fixed in 0.1.3.
 
 Because the decoding path takes `&[u8]` and performs no I/O, a fuzz target is a two-line harness with
 no filesystem setup and no mocking. That is one of the concrete payoffs of the SBIO rule.
