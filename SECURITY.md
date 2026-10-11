@@ -2,15 +2,12 @@
 
 ## Supported versions
 
-`heic-rs` has not had a release yet. Until 0.1.0 ships, the supported version is the `main` branch.
+Security fixes land on the latest published 0.1.x release; older minor versions are not backported.
 
 | Version | Supported |
 |---|---|
-| `main` (unreleased) | yes |
-| 0.1.x | yes, once released |
-
-After the first release, security fixes land on the latest published minor version. Older minor
-versions are not backported.
+| 0.1.2 and later 0.1.x | yes |
+| 0.1.0, 0.1.1 | no -- upgrade to 0.1.2, which fixes a panic on a malformed `uuid` box |
 
 ## Reporting a vulnerability
 

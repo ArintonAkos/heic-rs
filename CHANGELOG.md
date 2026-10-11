@@ -7,6 +7,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.2] - 2026-10-11
+
+A security fix. Take it if you decode untrusted files: a 24-byte input could make `decode` panic.
+Output, API and MSRV are unchanged.
+
+### Security
+
+- **A `uuid` box too small for its own extended type panicked instead of being refused.** The check
+  that a box's stated size covers its header was made before the 16-byte extended type of a `uuid`
+  box was read, so a `uuid` box stating 20 bytes passed it, and its payload was sliced from byte 24
+  of a 20-byte box: `slice index starts at 24 but ends at 20` (`src/boxes.rs`), with the default
+  options and in release builds. The header is now measured after the extended type, and the
+  payload is sliced from that measurement. No memory-safety impact: the crate is
+  `#![forbid(unsafe_code)]`, so the bug was a panic, which a caller decoding uploads should never
+  have to catch. Found by fuzzing and reported privately under `SECURITY.md`.
+
+### Added
+
+- Regression tests: the reported input, through `BoxIter` and `decode`; the same shape with a 64-bit
+  size; and every 32- and 64-bit header of a `uuid`, `mdat` or `meta` box with any stated size below
+  64 over every buffer length below 64 -- an error or a box, never a panic.
+
 ## [0.1.1] - 2026-09-11
 
 Performance. Output is bit-identical to 0.1.0 on every fixture, the API is unchanged, and the MSRV
