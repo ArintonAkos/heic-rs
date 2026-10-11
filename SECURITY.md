@@ -6,8 +6,8 @@ Security fixes land on the latest published 0.1.x release; older minor versions 
 
 | Version | Supported |
 |---|---|
-| 0.1.3 and later 0.1.x | yes |
-| 0.1.0 – 0.1.2 | no -- upgrade to 0.1.3 (a `uuid` box panic fixed in 0.1.2, an item-data amplification in 0.1.3) |
+| 0.1.4 and later 0.1.x | yes |
+| 0.1.0 – 0.1.3 | no -- upgrade to 0.1.4 (panics on malformed boxes and HEVC streams, and an item-data amplification, fixed in 0.1.2 to 0.1.4) |
 
 ## Reporting a vulnerability
 
@@ -98,6 +98,8 @@ found by fuzzing and reported privately by s17sh70x2jfl031ag. It is fixed in 0.1
 target rediscovers it from an empty corpus when the fix is reverted -- which is how the harness was
 shown to be able to find what it is for. The harness's own first finding came on its first CI run: items
 assembled from items could be made to demand gigabytes from a few hundred bytes. Fixed in 0.1.3.
+Five more panics in the HEVC decoder followed from the same reporter's fuzzing (fixed in 0.1.4); two of
+them needed overflow checks to show, so CI now fuzzes with debug assertions on.
 
 Because the decoding path takes `&[u8]` and performs no I/O, a fuzz target is a two-line harness with
 no filesystem setup and no mocking. That is one of the concrete payoffs of the SBIO rule.

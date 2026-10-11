@@ -12,7 +12,7 @@ toolchain:
 ```sh
 cargo install cargo-fuzz
 ./fuzz/seed.sh                                  # the test fixtures as a starting corpus
-cargo +nightly fuzz run decode -- -max_total_time=300
+cargo +nightly fuzz run -a decode -- -max_total_time=300   # -a: overflow checks on
 ```
 
 CI runs each target for a fixed time on every push and pull request (`.github/workflows/ci.yml`,

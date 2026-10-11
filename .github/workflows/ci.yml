@@ -159,10 +159,12 @@ jobs:
         run: ./fuzz/seed.sh
       # Two minutes a target, on every push and pull request: long enough that the box walk finds
       # the 0.1.1 `uuid` panic from an empty corpus (measured before this job was added), short
-      # enough to sit beside the other checks. A crash fails the job.
+      # enough to sit beside the other checks. A crash fails the job. With debug assertions (`-a`),
+      # so arithmetic overflow is a finding too: two of the five panics reported against 0.1.3
+      # needed them, and a release build hid them as errors.
       - name: Fuzz ${{ matrix.target }}
         run: >-
-          cargo +nightly fuzz run ${{ matrix.target }} fuzz/corpus/${{ matrix.target }}
+          cargo +nightly fuzz run -a ${{ matrix.target }} fuzz/corpus/${{ matrix.target }}
           -- -max_total_time=120 -rss_limit_mb=2048 -timeout=30
       - name: Keep the crashing input
         if: failure()

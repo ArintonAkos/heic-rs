@@ -7,6 +7,45 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.4] - 2026-10-11
+
+Security fixes: five ways a malformed HEVC stream could panic, all found by fuzzing and reported
+privately, with fixes, by **s17sh70x2jfl031ag** -- thank you again. Take it if you decode untrusted
+files. Output, API and MSRV are unchanged: every fixture still decodes bit for bit as before.
+
+### Security
+
+Panics in release builds:
+
+- **A block starting right of the picture.** Its width clips to nothing, but its row offsets were
+  still computed and on the last rows pointed past the end of the plane (`decode/recon.rs`). Such a
+  block now writes nothing, as blocks partly outside the picture already wrote only what is inside.
+- **A conformance window as large as the picture.** The crop then started outside the decoded plane
+  (`decode/mod.rs`). The SPS now refuses a window whose offsets leave no sample in either direction,
+  as FFmpeg's strict mode does, with the offsets scaled and summed in checked arithmetic.
+- **A reference row or column outside the plane.** For a block starting below or right of the
+  picture, the row above and the corner were read from past the end of the plane (`decode/refs.rs`).
+  They, and the column to the left, are now unavailable there, as a column below the plane already
+  was.
+
+Panics with overflow checks on (debug builds, tests, fuzzing); release builds returned an error:
+
+- **A PCM bit depth above the sample bit depth** underflowed `bit_depth - pcm_bit_depth`
+  (`decode/ctu.rs`). The SPS refuses it, as FFmpeg does, and also refuses a PCM block size outside
+  the 8 to 32 samples the standard allows: those sizes are shift amounts.
+- **A slice QP outside `-QpBdOffsetY..=51`** shifted the dequantiser by 64 or more
+  (`transform/dequant.rs`). The slice header refuses it, as FFmpeg does, in checked arithmetic; and
+  the PPS refuses an `init_qp` that no bit depth allows, which overflowed on its own.
+
+No memory-safety impact: the crate is `#![forbid(unsafe_code)]`.
+
+### Added
+
+- The five reported files as regression tests (`tests/hevc_hostile.rs`), each run in debug and in
+  release builds.
+- CI fuzzing runs with debug assertions, so arithmetic overflow fails the job; every input that has
+  found a bug is part of the seed corpus.
+
 ## [0.1.3] - 2026-10-11
 
 A security fix, the first finding of the fuzzing 0.1.2 added. Take it if you decode untrusted files:
