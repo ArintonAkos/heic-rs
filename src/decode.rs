@@ -181,8 +181,9 @@ pub fn pick_nclx(own: Option<Nclx>, coded: Option<VideoSignal>) -> Nclx {
 
 /// The colour description to convert an item's samples with.
 fn resolve_nclx(ctx: &Context<'_>, id: u32, p: &ItemProps<'_>) -> Result<Nclx> {
-    if p.nclx.is_some() {
-        return Ok(pick_nclx(p.nclx, None));
+    // `colr` is optional, and a grid carries none where its tiles do.
+    if let Some(declared) = ctx.declared_nclx(id)? {
+        return Ok(pick_nclx(Some(declared), None));
     }
     // A grid has no bitstream of its own. Its tiles do, and one of them
     // speaks for all: a grid is assembled from pictures of one kind.
